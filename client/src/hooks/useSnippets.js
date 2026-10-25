@@ -14,13 +14,14 @@ export const useSnippets = (filters = {}) => {
 
 // Fetch a single snippet by ID
 export const useSnippet = (id) => {
+  const numericId = id ? Number(id) : null;
   return useQuery({
-    queryKey: ['snippet', id],
+    queryKey: ['snippet', numericId],
     queryFn: async () => {
-      const res = await api.get(`/snippets/${id}`);
+      const res = await api.get(`/snippets/${numericId}`);
       return res.data.snippet;
     },
-    enabled: !!id,
+    enabled: !!numericId,
   });
 };
 
@@ -37,13 +38,14 @@ export const useLanguagesAndTags = () => {
 
 // Fetch snippet revision history from MongoDB (Module 3)
 export const useSnippetRevisions = (snippetId) => {
+  const numericId = snippetId ? Number(snippetId) : null;
   return useQuery({
-    queryKey: ['snippet-revisions', snippetId],
+    queryKey: ['snippet-revisions', numericId],
     queryFn: async () => {
-      const res = await api.get(`/snippets/${snippetId}/revisions`);
+      const res = await api.get(`/snippets/${numericId}/revisions`);
       return res.data.revisions;
     },
-    enabled: !!snippetId,
+    enabled: !!numericId,
   });
 };
 
@@ -69,13 +71,15 @@ export const useUpdateSnippet = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...snippetData }) => {
-      const res = await api.put(`/snippets/${id}`, snippetData);
+      const numericId = Number(id);
+      const res = await api.put(`/snippets/${numericId}`, snippetData);
       return res.data.snippet;
     },
     onSuccess: (data, variables) => {
+      const numericId = Number(variables.id);
       queryClient.invalidateQueries({ queryKey: ['snippets'] });
-      queryClient.invalidateQueries({ queryKey: ['snippet', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['snippet-revisions', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['snippet', numericId] });
+      queryClient.invalidateQueries({ queryKey: ['snippet-revisions', numericId] });
       queryClient.invalidateQueries({ queryKey: ['meta-languages-tags'] });
     },
   });
@@ -87,7 +91,8 @@ export const useDeleteSnippet = () => {
 
   return useMutation({
     mutationFn: async (id) => {
-      const res = await api.delete(`/snippets/${id}`);
+      const numericId = Number(id);
+      const res = await api.delete(`/snippets/${numericId}`);
       return res.data;
     },
     onSuccess: () => {
@@ -103,12 +108,14 @@ export const useToggleFavorite = () => {
 
   return useMutation({
     mutationFn: async (id) => {
-      const res = await api.patch(`/snippets/${id}/favorite`);
+      const numericId = Number(id);
+      const res = await api.patch(`/snippets/${numericId}/favorite`);
       return res.data.snippet;
     },
     onSuccess: (data, id) => {
+      const numericId = Number(id);
       queryClient.invalidateQueries({ queryKey: ['snippets'] });
-      queryClient.invalidateQueries({ queryKey: ['snippet', id] });
+      queryClient.invalidateQueries({ queryKey: ['snippet', numericId] });
     },
   });
 };

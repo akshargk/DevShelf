@@ -221,25 +221,7 @@ const updateSnippet = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Snippet not found' });
     }
 
-    // 2. Save previous version to MongoDB (Module 3)
-    try {
-      const revisionCount = await SnippetRevision.countDocuments({ snippetId: id });
-      await SnippetRevision.create({
-        snippetId: id,
-        version: revisionCount + 1,
-        title: current.title,
-        code: current.code,
-        language: current.language,
-        description: current.description || '',
-        tags: current.tags.map((t) => t.name),
-        changedAt: new Date(),
-        changeNote: changeNote || 'Updated snippet content',
-      });
-    } catch (mongoErr) {
-      console.warn('[MongoDB] Warning: Failed to archive previous revision:', mongoErr.message);
-    }
-
-    // 3. Update PostgreSQL
+    // 2. Update PostgreSQL
     const cleanTags = normalizeTags(tags);
     const tagConnectOrCreate = cleanTags.map((tagName) => ({
       where: { name: tagName },
@@ -264,6 +246,56 @@ const updateSnippet = async (req, res, next) => {
         },
       },
     });
+
+    // 3. Save newly updated version to MongoDB revision history (Module 3)
+    try {
+      const lastRevision = await SnippetRevision.findOne({ snippetId: id })
+        .sort({ version: -1 })
+        .select('version')
+        .lean();
+      const nextVersion = lastRevision ? lastRevision.version + 1 : 1;
+
+      await SnippetRevision.create({
+        snippetId: id,
+        version: nextVersion,
+        title: updated.title,
+        code: updated.code,
+        language: updated.language,
+        description: updated.description || '',
+        tags: updated.tags.map((t) => t.name),
+        changedAt: new Date(),
+        changeNote: changeNote || 'Updated snippet content',
+      });
+    } catch (mongoErr) {
+      console.error('[MongoDB] Error archiving revision:', mongoErr.message);
+
+      // Rollback PostgreSQL update to maintain multi-database consistency
+      try {
+        await prisma.snippet.update({
+          where: { id },
+          data: {
+            title: current.title,
+            code: current.code,
+            language: current.language,
+            description: current.description,
+            tags: {
+              set: [],
+              connectOrCreate: current.tags.map((t) => ({
+                where: { name: t.name },
+                create: { name: t.name },
+              })),
+            },
+          },
+        });
+      } catch (rollbackErr) {
+        console.error('[Prisma] Rollback failed:', rollbackErr.message);
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to archive snippet revision in MongoDB: ' + mongoErr.message,
+      });
+    }
 
     return res.json({
       success: true,
