@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F8F7F4;
+    color: #1C1E24;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  html.dark body,
+  .dark body {
+    background-color: #18191D;
+    color: #EAE7E3;
+  }
+
+  ::selection {
+    background-color: rgba(217, 103, 38, 0.2);
+    color: #1C1E24;
+  }
+
+  html.dark ::selection,
+  .dark ::selection {
+    background-color: rgba(229, 133, 55, 0.25);
+    color: #EAE7E3;
+  }
+}
+
+/* Warm Developer Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8D4CA;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #32353E;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BFB9AC;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #444853;
+}
+
+/* Prism code block styling */
+code[class*="language-"],
+pre[class*="language-"] {
+  background: #F3F1EB !important;
+  color: #1C1E24 !important;
+  text-shadow: none !important;
+}
+
+.dark code[class*="language-"],
+.dark pre[class*="language-"] {
+  background: #141518 !important;
+  color: #EAE7E3 !important;
+  text-shadow: none !important;
+}
+
+/* Syntax Tokens - Light Mode */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #78716C !important;
+  font-style: italic;
+}
+.token.keyword,
+.token.operator,
+.token.tag,
+.token.boolean {
+  color: #7C3AED !important;
+  font-weight: 500;
+}
+.token.string,
+.token.char,
+.token.attr-value {
+  color: #15803D !important;
+}
+.token.function,
+.token.class-name {
+  color: #0284C7 !important;
+  font-weight: 600;
+}
+.token.number {
+  color: #C2410C !important;
+}
+.token.punctuation {
+  color: #57534E !important;
+}
+
+/* Syntax Tokens - Dark Mode */
+.dark .token.comment {
+  color: #71717A !important;
+}
+.dark .token.keyword,
+.dark .token.operator,
+.dark .token.tag,
+.dark .token.boolean {
+  color: #C084FC !important;
+}
+.dark .token.string,
+.dark .token.char,
+.dark .token.attr-value {
+  color: #4ADE80 !important;
+}
+.dark .token.function,
+.dark .token.class-name {
+  color: #38BDF8 !important;
+}
+.dark .token.number {
+  color: #FB923C !important;
+}
+.dark .token.punctuation {
+  color: #9CA3AF !important;
+}
