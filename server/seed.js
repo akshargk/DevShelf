@@ -111,13 +111,57 @@ const verifyAuth = (req, res, next) => {
     tags: ['node', 'express', 'auth', 'jwt'],
     isFavorite: false,
   },
+  {
+    title: 'TypeScript Safe Result Monad',
+    language: 'typescript',
+    description: 'Type-safe error handling pattern avoiding try-catch boilerplate in TypeScript.',
+    code: `export type Result<T, E = Error> =
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+export async function tryCatch<T>(promise: Promise<T>): Promise<Result<T>> {
+  try {
+    const data = await promise;
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error(String(error))
+    };
+  }
+}`,
+    tags: ['typescript', 'error-handling', 'types', 'patterns'],
+    isFavorite: true,
+  },
+  {
+    title: 'Docker Multi-Stage Production Build',
+    language: 'docker',
+    description: 'Optimized minimal production Docker container for Node.js Express microservices.',
+    code: `# Stage 1: Build & Dependencies
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Stage 2: Minimal Runtime
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+EXPOSE 5000
+USER node
+CMD ["node", "server.js"]`,
+    tags: ['docker', 'devops', 'node', 'containers'],
+    isFavorite: false,
+  },
 ];
 
 async function seed() {
   console.log('Seeding DevShelf database...');
   await connectMongo();
 
-  // Create demo user
+  // Create or verify demo user
   const email = 'alex@example.com';
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash('password123', salt);
@@ -133,13 +177,21 @@ async function seed() {
     });
     console.log(`[Seed] Created demo user: ${user.email} (password: password123)`);
   } else {
-    console.log(`[Seed] Demo user already exists: ${user.email}`);
+    // Ensure password is reset to password123 in case it was modified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+    console.log(`[Seed] Verified demo user: ${user.email} (password: password123)`);
   }
 
-  // Create demo snippets if user has none
-  const count = await prisma.snippet.count({ where: { userId: user.id } });
-  if (count === 0) {
-    for (const item of demoSnippets) {
+  // Idempotently create demo snippets
+  for (const item of demoSnippets) {
+    const existingSnippet = await prisma.snippet.findFirst({
+      where: { userId: user.id, title: item.title },
+    });
+
+    if (!existingSnippet) {
       const tagConnect = item.tags.map((t) => ({
         where: { name: t },
         create: { name: t },
@@ -160,25 +212,29 @@ async function seed() {
         include: { tags: true },
       });
 
-      // Module 3: Initial revision in MongoDB
-      await SnippetRevision.create({
-        snippetId: snippet.id,
-        version: 1,
-        title: snippet.title,
-        code: snippet.code,
-        language: snippet.language,
-        description: snippet.description,
-        tags: snippet.tags.map((t) => t.name),
-        changedAt: new Date(),
-        changeNote: 'Initial seeded snippet version',
-      });
-      console.log(`[Seed] Created snippet: "${snippet.title}" with initial MongoDB revision`);
+      // Module 3: Initial revision in MongoDB (graceful if MongoDB is offline)
+      try {
+        await SnippetRevision.create({
+          snippetId: snippet.id,
+          version: 1,
+          title: snippet.title,
+          code: snippet.code,
+          language: snippet.language,
+          description: snippet.description,
+          tags: snippet.tags.map((t) => t.name),
+          changedAt: new Date(),
+          changeNote: 'Initial seeded snippet version',
+        });
+        console.log(`[Seed] Created snippet: "${snippet.title}" + MongoDB revision`);
+      } catch (mongoErr) {
+        console.log(`[Seed] Created snippet: "${snippet.title}" in PostgreSQL (MongoDB revision skipped)`);
+      }
+    } else {
+      console.log(`[Seed] Snippet already exists: "${item.title}"`);
     }
-  } else {
-    console.log(`[Seed] User already has ${count} snippets.`);
   }
 
-  console.log('Seeding complete!');
+  console.log('Seeding complete! You can now log in with alex@example.com / password123');
   process.exit(0);
 }
 

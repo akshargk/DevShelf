@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('devshelf_user');
@@ -43,23 +45,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    queryClient.clear();
     const res = await api.post('/auth/login', { email, password });
     if (res.data.success) {
       setUser(res.data.user);
       setToken(res.data.token);
       localStorage.setItem('devshelf_token', res.data.token);
       localStorage.setItem('devshelf_user', JSON.stringify(res.data.user));
+      queryClient.clear();
       return res.data;
     }
   };
 
   const register = async (name, email, password) => {
+    queryClient.clear();
     const res = await api.post('/auth/register', { name, email, password });
     if (res.data.success) {
       setUser(res.data.user);
       setToken(res.data.token);
       localStorage.setItem('devshelf_token', res.data.token);
       localStorage.setItem('devshelf_user', JSON.stringify(res.data.user));
+      queryClient.clear();
       return res.data;
     }
   };
@@ -70,6 +76,7 @@ export const AuthProvider = ({ children }) => {
     } catch {
       // Ignore network errors on logout
     } finally {
+      queryClient.clear();
       localStorage.removeItem('devshelf_token');
       localStorage.removeItem('devshelf_user');
       setUser(null);

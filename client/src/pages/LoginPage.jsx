@@ -22,6 +22,12 @@ const LoginPage = () => {
     if (error) setError('');
   };
 
+  const handleFillDemo = () => {
+    setEmail('alex@example.com');
+    setPassword('password123');
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -131,7 +137,33 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-warm-border/60 dark:border-darkWarm-border/60 text-center text-xs text-warm-muted dark:text-darkWarm-muted font-sans">
+          {/* Quick Demo Credentials */}
+          <div className="mt-5 pt-4 border-t border-warm-border/60 dark:border-darkWarm-border/60">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-mono text-warm-dim dark:text-darkWarm-dim">
+                Quick Evaluation:
+              </span>
+              <span className="text-[10px] font-mono font-medium text-warm-accent dark:text-darkWarm-accent bg-warm-accent/10 dark:bg-darkWarm-accent/15 px-1.5 py-0.5 rounded">
+                Demo Ready
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleFillDemo}
+              className="w-full py-2 px-3 rounded-md bg-warm-surfaceRaised dark:bg-darkWarm-surfaceRaised hover:bg-warm-border/40 dark:hover:bg-darkWarm-border/40 border border-warm-border dark:border-darkWarm-border text-warm-text dark:text-darkWarm-text text-xs font-mono flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+            >
+              <Code2 className="h-3.5 w-3.5 text-warm-accent dark:text-darkWarm-accent shrink-0" />
+              <span>Use Demo Account</span>
+              <span className="text-[11px] text-warm-muted dark:text-darkWarm-muted">
+                (alex@example.com)
+              </span>
+            </button>
+            <p className="text-[10px] text-center text-warm-dim dark:text-darkWarm-dim mt-1.5 font-mono">
+              Password: <code className="text-warm-text dark:text-darkWarm-text">password123</code>
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-warm-border/40 dark:border-darkWarm-border/40 text-center text-xs text-warm-muted dark:text-darkWarm-muted font-sans">
             Don't have an account?{' '}
             <Link to="/register" className="text-warm-accent dark:text-darkWarm-accent hover:underline font-mono font-medium">
               Create an account
