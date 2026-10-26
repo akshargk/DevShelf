@@ -37,16 +37,35 @@ const CodeBlock = ({
     return l || 'javascript';
   };
 
+  // Normalize code: unescape literal "\n" or "\r\n" if code was stored with escaped newlines
+  const formattedCode = React.useMemo(() => {
+    if (!code) return '';
+    if (typeof code !== 'string') return String(code);
+    if (!code.includes('\n') && code.includes('\\n')) {
+      return code
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '  ');
+    }
+    if (code.includes(';\\n') || code.includes('{\\n') || code.includes('}\\n') || code.includes('\\n  ')) {
+      return code
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '  ');
+    }
+    return code;
+  }, [code]);
+
   useEffect(() => {
     if (codeRef.current) {
       Prism.highlightElement(codeRef.current);
     }
-  }, [code, language]);
+  }, [formattedCode, language]);
 
   const handleCopy = async (e) => {
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(formattedCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -55,7 +74,7 @@ const CodeBlock = ({
   };
 
   const prismLang = getGrammarLang(language);
-  const lines = (code || '').split('\n');
+  const lines = formattedCode.split('\n');
   const lineCount = lines.length;
 
   return (
@@ -106,7 +125,7 @@ const CodeBlock = ({
 
           <pre className="p-3 m-0 flex-1 overflow-x-auto font-mono text-[12px] leading-relaxed">
             <code ref={codeRef} className={`language-${prismLang} font-mono`}>
-              {code}
+              {formattedCode}
             </code>
           </pre>
         </div>

@@ -18,10 +18,22 @@ const normalizeTags = (tagsInput) => {
   return [];
 };
 
+// Helper to sanitize code: unescapes literal "\n" or "\r\n" if code was sent as double-escaped string
+const sanitizeCode = (raw) => {
+  if (typeof raw !== 'string') return '';
+  if (!raw.includes('\n') && raw.includes('\\n')) {
+    return raw.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\t/g, '  ').trim();
+  }
+  return raw.trim();
+};
+
 // GET /api/snippets
 const getSnippets = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = Number(req.user?.id);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
     const { search, language, tag, favorite } = req.query;
 
     const where = {
@@ -144,7 +156,7 @@ const createSnippet = async (req, res, next) => {
       data: {
         userId: req.user.id,
         title: title.trim(),
-        code: code.trim(),
+        code: sanitizeCode(code),
         language: language.trim().toLowerCase(),
         description: description ? description.trim() : null,
         tags: {
@@ -232,7 +244,7 @@ const updateSnippet = async (req, res, next) => {
       where: { id },
       data: {
         title: title.trim(),
-        code: code.trim(),
+        code: sanitizeCode(code),
         language: language.trim().toLowerCase(),
         description: description ? description.trim() : null,
         tags: {

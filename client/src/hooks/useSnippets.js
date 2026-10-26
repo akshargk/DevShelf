@@ -1,51 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 
 // Fetch all snippets with optional filters
 export const useSnippets = (filters = {}) => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['snippets', filters],
+    queryKey: ['snippets', user?.id, filters],
     queryFn: async () => {
       const res = await api.get('/snippets', { params: filters });
       return res.data.snippets;
     },
+    enabled: !!user?.id,
   });
 };
 
 // Fetch a single snippet by ID
 export const useSnippet = (id) => {
+  const { user } = useAuth();
   const numericId = id ? Number(id) : null;
   return useQuery({
-    queryKey: ['snippet', numericId],
+    queryKey: ['snippet', user?.id, numericId],
     queryFn: async () => {
       const res = await api.get(`/snippets/${numericId}`);
       return res.data.snippet;
     },
-    enabled: !!numericId,
+    enabled: !!numericId && !!user?.id,
   });
 };
 
 // Fetch available languages and tags for active user
 export const useLanguagesAndTags = () => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['meta-languages-tags'],
+    queryKey: ['meta-languages-tags', user?.id],
     queryFn: async () => {
       const res = await api.get('/snippets/meta/languages-and-tags');
       return res.data;
     },
+    enabled: !!user?.id,
   });
 };
 
 // Fetch snippet revision history from MongoDB (Module 3)
 export const useSnippetRevisions = (snippetId) => {
+  const { user } = useAuth();
   const numericId = snippetId ? Number(snippetId) : null;
   return useQuery({
-    queryKey: ['snippet-revisions', numericId],
+    queryKey: ['snippet-revisions', user?.id, numericId],
     queryFn: async () => {
       const res = await api.get(`/snippets/${numericId}/revisions`);
       return res.data.revisions;
     },
-    enabled: !!numericId,
+    enabled: !!numericId && !!user?.id,
   });
 };
 

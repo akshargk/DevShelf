@@ -23,7 +23,13 @@ const SnippetForm = ({ initialData = {}, onSubmit, isSubmitting, isEdit = false 
 
   const [title, setTitle] = useState(initialData.title || '');
   const [language, setLanguage] = useState(initialData.language || 'javascript');
-  const [code, setCode] = useState(initialData.code || '');
+  const [code, setCode] = useState(() => {
+    const raw = initialData.code || '';
+    if (typeof raw === 'string' && !raw.includes('\n') && raw.includes('\\n')) {
+      return raw.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n');
+    }
+    return raw;
+  });
   const [description, setDescription] = useState(initialData.description || '');
   const [tags, setTags] = useState(() => {
     if (Array.isArray(initialData.tags)) {
