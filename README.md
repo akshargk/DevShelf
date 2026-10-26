@@ -22,8 +22,21 @@ Users can create and edit snippets, categorize them with tags, search their code
 - **Tags** — Organize snippets into searchable categories.
 - **Favorites** — Mark important snippets for quick access.
 - **Revision History** — Store and retrieve previous snippet versions.
-- **Responsive Interface** — Access your snippets through a modern web interface.
+- **Responsive Interface** — Access snippets through a modern web interface.
 - **Light and Dark Themes** — Choose a comfortable viewing experience.
+- **Demo Account** — Explore the application using a preconfigured demo account with sample snippets.
+
+## Demo Account
+
+Want to explore DevShelf without creating your own account? Visit the live application:
+
+**[Open DevShelf](https://dev-shelf-sable.vercel.app)**
+
+The demo account includes preset code snippets so you can explore snippet management, searching, favorites, editing, and revision history.
+
+The login page displays the demo credentials. Use the **Use Demo Account** button to access the demo.
+
+> **Note:** The demo account is intended for evaluation. Avoid storing private or sensitive information in demo snippets.
 
 ## Tech Stack
 
@@ -49,56 +62,67 @@ DevShelf uses **polyglot persistence**, choosing different database technologies
 
 ### PostgreSQL + Prisma
 
-Stores the application's structured, current data:
+PostgreSQL stores the application's structured data, including:
 
-- Users and authentication-related records
+- User accounts and authentication-related records
 - Code snippets and their metadata
 - Tags and snippet-tag relationships
-- Relational constraints and timestamps
+- Timestamps and relational constraints
 
 Prisma provides schema modeling and database access through Prisma Client.
 
 ### MongoDB + Mongoose
 
-Stores snippet revision documents, including historical code snapshots and associated metadata.
+MongoDB stores snippet revision documents, including historical code snapshots and associated metadata.
 
-This separation allows the application to manage current snippet data relationally while keeping revision history in a document-oriented database.
+When a snippet is edited, the revision-history workflow stores previous versions so users can review changes over time.
+
+This separation allows DevShelf to manage current snippet data relationally while keeping revision history in a document-oriented database.
 
 ## How It Works
 
 1. A user registers or logs in.
-2. The user creates a snippet with its title, programming language, code, description, and tags.
+2. The user creates a snippet with a title, programming language, code, description, and optional tags.
 3. The backend validates the request and stores the current snippet in PostgreSQL using Prisma.
-4. The frontend displays the snippet with syntax highlighting and supports search, filtering, and favorites.
-5. When a snippet is edited, the backend handles the update and revision-history workflow.
+4. The frontend displays snippets with syntax highlighting and supports searching, filtering, and favorites.
+5. When a snippet is edited, the backend updates the current record and handles the revision-history workflow.
 6. Historical versions can be retrieved from MongoDB through the backend API.
 
 ## Getting Started
 
+Follow these instructions to run DevShelf locally.
+
 ### Prerequisites
 
-Install the following before running DevShelf locally:
+Install the following:
 
-- Node.js and npm
+- [Node.js](https://nodejs.org/)
+- npm
 - PostgreSQL
 - MongoDB
 - Git
 
-### 1. Clone the repository
+You will also need access to PostgreSQL and MongoDB databases for local development.
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/akshargk/DevShelf.git
 cd DevShelf
 ```
 
-### 2. Set up the backend
+### 2. Set Up the Backend
+
+Navigate to the backend directory:
 
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file in the `server` directory and configure the required environment variables.
+Create a `.env` file in the `server` directory and configure the environment variables required by your backend.
+
+Example:
 
 ```env
 PORT=5000
@@ -108,17 +132,43 @@ JWT_SECRET=your_strong_random_secret
 CLIENT_URL=http://localhost:5173
 ```
 
-Replace the example values with your own credentials. Never commit `.env` files or expose database credentials and JWT secrets.
+Replace the example values with your own connection strings and secrets. Check the existing backend configuration to confirm the required variable names and values.
 
-Run the database migrations using the project's configured Prisma version and migration workflow. Then start the backend using the appropriate script in `server/package.json`, for example:
+**Security reminders:**
+
+- Never commit `.env` files.
+- Never expose database credentials or JWT secrets.
+- Use a strong, private JWT secret.
+- Do not use production credentials in a public repository.
+
+### 3. Configure the PostgreSQL Database
+
+Make sure your PostgreSQL database is running and `DATABASE_URL` points to the intended database.
+
+From the `server` directory, run the project's configured Prisma migration command. For example:
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+Use the migration workflow appropriate to your existing schema and environment. Do not run migrations against a database containing important data without checking their effects first.
+
+### 4. Start the Backend
+
+From the `server` directory, start the backend using the script configured in `server/package.json`.
+
+For example, if the project defines a development script:
 
 ```bash
 npm run dev
 ```
 
-### 3. Set up the frontend
+Otherwise, use the appropriate start command defined by the project.
 
-Open a second terminal:
+### 5. Set Up the Frontend
+
+Open a second terminal and navigate to the project directory:
 
 ```bash
 cd client
@@ -131,7 +181,7 @@ Create a `.env` file in the `client` directory:
 VITE_API_URL=http://localhost:5000
 ```
 
-Check the frontend API configuration to confirm the expected URL format.
+Confirm the expected API URL format in the frontend configuration before using this value.
 
 Start the frontend:
 
@@ -139,11 +189,43 @@ Start the frontend:
 npm run dev
 ```
 
-Open the local URL displayed by Vite, usually `http://localhost:5173`.
+Open the local URL displayed by Vite, usually:
 
-> **Note:** Available scripts, environment variable names, and API URL conventions should match the current project configuration. Check the `package.json` files and existing environment examples before running the commands.
+`http://localhost:5173`
+
+### 6. Seed Sample Data (Optional)
+
+Sample data can be useful when developing or testing DevShelf locally.
+
+If the repository contains a `seed.js` file or another seed script, inspect it before running it to confirm:
+
+- Which database it connects to.
+- Whether it creates the demo account.
+- Which sample snippets and tags it creates.
+- Whether repeated runs can create duplicate records.
+- Whether it modifies or deletes existing data.
+
+If `server/package.json` defines a seed command, run it from the backend directory. For example:
+
+```bash
+npm run seed
+```
+
+The command above is only an example. Use the actual command configured in the repository.
+
+If no seed command is configured, follow the instructions in the existing seed file or configure the appropriate script before running it.
+
+**Important:**
+
+- Configure the required database environment variables before seeding.
+- Use your intended local development database.
+- Do not run a seed script against production unless you explicitly intend to provision production data and have checked what the script does.
+- Ensure the seed process avoids duplicate demo users and snippets.
+- Keep all personal and production data intact.
 
 ## Project Structure
+
+The following is a simplified overview. Refer to the repository for the complete directory structure.
 
 ```text
 DevShelf/
@@ -158,11 +240,10 @@ DevShelf/
 │   ├── models/
 │   ├── routes/
 │   ├── prisma/
+│   ├── server.js
 │   └── ...
 └── README.md
 ```
-
-The structure above is a simplified overview. Refer to the repository for the complete directory layout.
 
 ## Learning Objectives
 
@@ -177,14 +258,17 @@ This project demonstrates practical application of:
 - Document-based data modeling with MongoDB and Mongoose
 - Polyglot persistence
 - Frontend server-state management with TanStack Query
+- Revision-history management for code snippets
 
 ## Future Improvements
 
-- Improve full-text search for large snippet collections.
-- Add configurable revision retention policies.
-- Improve automated testing for database operations and API endpoints.
-- Add snippet import and export functionality.
-- Enhance revision comparison and restore workflows.
+Potential improvements include:
+
+- Enhanced full-text search for large snippet collections
+- Configurable revision-retention policies
+- Automated testing for database operations and API endpoints
+- Snippet import and export functionality
+- Improved revision comparison and restore workflows
 
 ## Author
 
